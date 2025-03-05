@@ -1,15 +1,22 @@
-package org.chatwebsocket.easydiaryserver;
+package edserver.websocket;
 
-import org.springframework.web.socket.WebSocketHandler;
-
+import edserver.model.ChatMessage;
+import edserver.service.ChatService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+@Component  // ✅ 确保 Spring 托管该类
 public class ChatWebSocketHandler extends TextWebSocketHandler {
+
     private static final CopyOnWriteArrayList<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
+
+    @Autowired
+    private ChatService chatService;  // ✅ 确保 Spring 可以注入
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
@@ -18,21 +25,18 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws IOException {
-        String originalMessage = message.getPayload(); // 获取客户端发送的原始消息
-        String modifiedMessage = "📢 服务器消息: " + originalMessage; // 在消息前添加固定前缀
+        ChatMessage chatMessage = new ChatMessage("User", message.getPayload(), String.valueOf(System.currentTimeMillis()));
+        chatService.saveMessage(chatMessage);
 
-        // 发送修改后的消息给所有客户端
         for (WebSocketSession webSocketSession : sessions) {
             if (webSocketSession.isOpen()) {
-                webSocketSession.sendMessage(new TextMessage(modifiedMessage));
+                webSocketSession.sendMessage(new TextMessage(chatMessage.getMessage()));
             }
         }
     }
-
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         sessions.remove(session);
     }
 }
-
