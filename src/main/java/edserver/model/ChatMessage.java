@@ -1,40 +1,41 @@
 package edserver.model;
 
+import jakarta.persistence.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
+import java.util.Date;
 
+@Entity  // 确保这个注解存在
+@Table(name = "chat_messages")  // 映射到数据库中的 chat_messages 表
 public class ChatMessage {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     private String sender;
-    private String receiver; // 为 null 表示群聊
+    private String receiver;
+
+    @Column(nullable = false)
     private String message;
-    private String timestamp;
 
-    public ChatMessage() {}
-
-    public ChatMessage(String sender, String receiver, String message, String timestamp) {
-        this.sender = sender;
-        this.receiver = receiver;
-        this.message = message;
-        this.timestamp = timestamp;
-    }
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(nullable = false, updatable = false)
+    private java.util.Date timestamp = new java.util.Date();
 
     public ChatMessage(String user, String payload, String s) {
         this.sender = user;
-        this.message = payload;
-        this.timestamp = s;
     }
 
+    public ChatMessage() {
 
-    // JSON 解析
-    public static ChatMessage fromJson(String json) throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.readValue(json, ChatMessage.class);
     }
 
-    public String toJson() throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.writeValueAsString(this);
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getSender() {
@@ -61,13 +62,11 @@ public class ChatMessage {
         this.message = message;
     }
 
-    public String getTimestamp() {
+    public Date getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(String timestamp) {
+    public void setTimestamp(Date timestamp) {
         this.timestamp = timestamp;
     }
-
 }
-
